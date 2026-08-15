@@ -1,0 +1,11 @@
+TASK 1
+1.1 The Problem
+University XR labs hold a small number of expensive headsets that many students need to share. Most labs still run this on a paper sign-out sheet, a whiteboard, or a shared spreadsheet.
+This causes four problems:
+1.	Double bookings. Two students book the same headset for overlapping days because nobody can see the full calendar at once.
+2.	No record of who has what. When a headset goes missing, staff cannot say who had it last or when it was due back.
+3.	Students waste trips. A student walks to the lab to find every headset is already out, because availability is not visible before they leave.
+4.	Damage is untracked. A headset comes back with a cracked lens and there is no record linking that damage to a specific loan.
+The lab technician ends up doing the scheduling by hand and holding the whole picture in their head.
+XRLend fixes this. It is one website where the technician keeps the headset list up to date, students see what is actually free for the dates they want, and every loan is recorded from request through to return.
+Why this is worth building. The main problem is a scheduling rule, it's not a data entry form. Two loans of the same headset must not overlap in time. That single rule is what a spreadsheet cannot do and what the system can support.
