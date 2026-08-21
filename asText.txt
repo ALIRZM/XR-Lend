@@ -3,20 +3,16 @@ XRLend — XR Headset Borrowing System	1
 IFN636 Software Life Cycle Management	1
 TASK 1	1
 1.1 The Problem	1
-1.2 Stakeholders	1
-1.3 User Roles	1
-1.4 The Two End-to-End Workflows	1
-1.5 Scope	1
-1.6 Success Criteria	1
-1.7 Requirements List	1
-1.8 Product Backlog	1
-1.9 Sprint Plan	1
-1.10 Decision and Change Log	1
-1.11 CRUD Coverage	1
-TASK 2 — SYSTEM DESIGN	1
-2.1 The Diagrams	1
-2.2 Traceability Matrix	1
-Before You Submit	1
+1.2 Stakeholders	2
+1.3 User Roles	2
+1.4 The Two End-to-End Workflows	3
+1.5 Scope	4
+1.6 Success Criteria	5
+1.7 Requirements List	5
+1.8 Product Backlog	6
+1.9 Sprint Plan	11
+1.10 Decision and Change Log	17
+1.11 CRUD Coverage	19
 
 XRLend — XR Headset Borrowing System
 IFN636 Software Life Cycle Management
@@ -64,9 +60,9 @@ Approve or reject a request	No	Yes
 Record a collection	No	Yes
 Record a return and its condition	No	Yes
 See all loans across all students	No	Yes
+Sign up as a technician using the staff code	No	Yes
 
 Students can request a headset. Only the technician can approve it and hand it over. This matches how equipment loans normally work, and fewer rules means fewer things to test.
-
 1.4 The Two End-to-End Workflows
 Each workflow belongs to a different role and finishes on its own. They meet at the loan request, which is what makes this one system rather than two
 
@@ -88,23 +84,16 @@ B4	Technician opens the pending request queue	R8
 B5	Checks the dates and approves or rejects, giving a reason if rejected	R9
 B6	Queue updates and the student sees the decision	R9
 Finished when: the request has a decision recorded against it and the queue no longer shows it.
-Why these two
-Workflow B puts a headset into the system, and Workflow A is how a student gets hold of it. The request created at the end of Workflow A is the thing Workflow B decides on. Neither is a smaller version of the other, and removing either one stops the system working.
-Both end at the same point from different sides: the student sees a decision, the technician made it.
-What comes after
-Recording a collection and a return (Stories 4.3 and 4.4) sit outside both workflows. They happen in person at the lab counter after the decision is made, and the system only writes down what already happened. They stay in the backlog as Should items and would be the first thing added in a third sprint.
-Which one is drawn
-Workflow A is drawn as a sequence diagram in Task 2. It contains the availability check, which is the rule the whole system exists to enforce, so it shows more of how the system behaves than Workflow B does.
-
 1.5 Scope
 In scope
 •	Sign up, log in, log out
-•	Two roles, chosen at sign up or set by the technician
+•	Two roles, chosen at sign up, with a staff code required for the technician role.
 •	Headset records with model, asset tag, status and notes
 •	Availability search across a date range
 •	Loan requests with start and end dates
 •	Approve and reject steps, with a reason on rejection 
-•	Recording collection and return, built after the two workflowsOverlap checking so one headset cannot be double booked
+•	Recording collection and return, built after the two workflows
+•	Overlap checking so one headset cannot be double booked
 •	Student loan history
 •	Technician view of all loans
 •	Input checks on all forms
@@ -130,6 +119,7 @@ Assumptions
 7.	The team is 1 person working about 15 hours a week.
 8.	The site only needs to be running during the marking period.
 9.	AWS free tier is enough for a demo with a few users.
+10.	The lab holds a single staff access code, given out in person by the lab manager. There is no per-person staff invite.
 1.6 Success Criteria
 Each one can be checked. Vague goals like “easy to use” are not included because you cannot measure them.
 ID	Criteria	How to check	Target
@@ -142,147 +132,261 @@ SC6	Controller test coverage	Coverage report	70% or more
 SC7	Roles are enforced on the server	Try 6 requests with the wrong role token	0 get through
 SC8	No passwords or keys in the repo	Search the git history	0 found
 SC9	Site is reachable during marking	Load the public URL	200 OK
-SC10	Every requirement traced to a commit	Check the traceability matrix	All of R1–R16
+SC10	Every requirement traced to a commit	Check the traceability matrix 2.2	All of R1–R7
 1.7 Requirements List
 These IDs are used again in the traceability matrix, so do not change them.
 Functional
-ID	Requirement	Priority
-R1	A visitor can sign up and log in	Must
-R2	A user gets a session token and is sent to the right dashboard for their role	Must
-R3	A technician can add and retire a headset	Must
-R4	A student can browse the headset list	Must
-R5	A student can search availability for a date range	Must
-R6	A student can request a loan for a free headset and date range	Must
-R7	A student can see their own loan history and current status	Must
-R8	A technician can see all pending requests	Must
-R9	A technician can approve or reject a request, with a reason if rejected	Must
-R10	A technician can record that a headset was collected	Should
-R11	A technician can record a return and the condition	Should
-R12	A student can cancel their own pending request	Must
+ID	Requirement
+R1	A visitor can sign up and log in, and lands on the dashboard for their role
+R2	A technician can add, edit, set the status of, and retire a headset
+R3	A student can browse headsets and search availability for a date range
+R4	A student can request a loan, see their own loans, and cancel a pending request
+R5	A technician can see pending requests, approve or reject with a reason, and record collection and return
+
 Non-functional
-ID	Requirement	Priority	How it is checked
-R13	Two approved loans for the same headset must never overlap in time	Must	Overlap test suite, database check
-R14	Every protected route checks the user’s role	Must	Wrong-role tests
-R15	Passwords are stored as hashes, never as plain text	Must	Look in the database
-R16	All inputs are checked on the client and the server	Must	Boundary tests, including end date before start date
+ID	Requirement
+R6	Two approved loans for the same headset must never overlap in time
+R7	Roles are checked on the server, passwords are stored as hashes, and all input is checked on the client and the server
 1.8 Product Backlog
 Priority uses MoSCoW. Estimates use story points (1, 2, 3, 5, 8).
 Structure follows Tutorial 2: Epic → Story → Sub-task. A Task is technical work that users do not see directly.
 ________________________________________
-EPIC 1 — Login and Access Control
-Everything else needs this first. Must · 20 points
-Story 1.1 — Sign up · 5 pts · Must · R1 As a visitor, I want to create an account, so I can use the lab booking system.
-Acceptance criteria:
-•	Given valid details, when I submit, then my account is created and I land on the student dashboard.
-•	Given an email that already exists, when I submit, then I see an error and no second account is made.
-•	Given a password under 8 characters, when I submit, then I see a validation message and nothing is sent.
-•	Given a new account, when I check the database, then the password is stored as a hash.
-Sub-tasks: User schema with a role field · signup endpoint · password hashing · signup form with validation · tests for duplicate email and weak password
-________________________________________
-Story 1.2 — Log in and land on the right dashboard · 5 pts · Must · R2 As a user, I want to log in and go straight to the screen for my role, so I do not have to hunt for what I need.
-Acceptance criteria:
-•	Given correct details for a student, when I log in, then I reach the student dashboard.
-•	Given correct details for a technician, when I log in, then I reach the technician dashboard.
-•	Given wrong details, when I log in, then I see a general error that does not say whether the email exists.
-•	Given an expired token, when I open a protected page, then I am sent back to login.
-Sub-tasks: login endpoint · token creation and expiry · role-based redirect · protected route middleware · login form with error states · tests
-________________________________________
-Story 1.3 — Log out · 2 pts · Must · R2 As a logged-in user, I want to log out, so nobody else can use my session on a lab computer.
-Acceptance criteria: the token is cleared and protected pages send me back to login.
-________________________________________
-Task 1.4 — Connect MongoDB Atlas · 3 pts · Must Connection string comes from an environment variable. .env is added to .gitignore before the first commit.
-Task 1.5 — Build role check middleware · 5 pts · Must · R14 Checks roles on the server. Tests confirm a student token cannot reach technician routes and the other way around.
-________________________________________
-EPIC 2 — Headset Inventory
-The technician side. Needs Epic 1. Must · 16 points
-Story 2.1 — Add a headset · 5 pts · Must · R3 As a technician, I want to add a headset with its model and asset tag, so students can see it exists.
-Acceptance criteria:
-•	Given I am a technician and fill in all fields, when I submit, then the headset is saved with status Available and shows in the list.
-•	Given an asset tag that already exists, when I submit, then I see an error and nothing is saved.
-•	Given a missing model or asset tag, when I submit, then I see a validation message.
-•	Given I am a student calling the endpoint directly, then the server returns 403.
-Sub-tasks: Headset schema · unique index on asset tag · create endpoint with role check · add form · list view · role rejection test
-________________________________________
-Story 2.2 — Edit a headset · 3 pts · Must · R3 Acceptance criteria: changes are saved and visible after reload; the asset tag stays unique; only technicians can edit.
-________________________________________
-Story 2.3 — Set a headset to under maintenance · 5 pts · Should · R3 As a technician, I want to mark a headset as under maintenance, so students cannot book a broken unit.
-Acceptance criteria:
-•	Given a headset set to Maintenance, when a student searches availability, then it does not appear.
-•	Given the headset has approved future loans, when I set it to Maintenance, then I am warned and shown which loans are affected.
-•	Given it is set back to Available, then it appears in searches again.
-________________________________________
-Story 2.4 — Retire a headset · 3 pts · Must · R3 As a technician, I want to retire a headset that is no longer in service, so students stop seeing it.
-Acceptance criteria:
-•	Given a retired headset, when a student browses or searches, then it does not appear.
-•	Given the headset has past loans, when it is retired, then those loan records still show it, so history is not lost.
-•	Given the headset has approved future loans, when I try to retire it, then I am warned and shown which loans are affected.
+Epic 1 — Foundations · 28 points
+Accounts, roles, the database, the server and the tests. None of it is visible to a user, but nothing else works without it.
+Story 1.1 — Sign up and log in  · 8 pts · Must · R1, R7
+As a visitor, I want to make an account and log in, so that I can use the system.
+Acceptance criteria
+•	Given valid details and the Student role, when I submit, then my account is created and I land on the student dashboard.
+•	Given the Technician role and the correct staff code, when I submit, then my account is created with the technician role.
+•	Given the Technician role and a wrong or blank staff code, when I submit, then I see an error and no account is created.
+•	Given a new account, when I look in the database, then the password is stored as a hash.
+•	Given I am logged in, when I log out, then my token is cleared and protected pages send me back to login.
+Sub-tasks
+•	Signup and login forms, staff code check against an environment variable, password hashing, token issue, role-based redirect.
+Story 1.2 — Role check middleware  · 5 pts · Must · R7
+As a technician, I want role checks on the server, so that a student cannot reach my routes by changing the URL.
+Acceptance criteria
+•	Given a student token, when it is sent to a technician route, then the server returns 403.
+•	Given no token, when a protected route is called, then the server returns 401.
+•	Given a technician token, when it is sent to a technician route, then the request goes through.
+Story 1.3 — Set up the database and EC2  · 5 pts · Must · Task
+Acceptance criteria
+•	MongoDB Atlas is connected and the EC2 public IP is on the access list.
+•	The EC2 instance runs the app and the public URL loads.
+•	Inbound rules only open the ports the app needs.
+Story 1.4 — Write the README and deployment steps  · 5 pts · Must · Task
+Acceptance criteria
+•	The README has setup, an architecture summary, known limits and the deployment URL.
+•	The deployment steps are complete enough to rebuild the server from scratch.
+•	No password, key or connection string is anywhere in the repo, and `.env` is in `.gitignore`.
+Story 1.5 — Unit tests to 70% coverage  · 5 pts · Must · Task
+Acceptance criteria
+•	Controller coverage is 70% or more.
+•	The seven overlap cases from Story 3.2 all pass.
+•	The wrong-role test from Story 1.2 passes.
+Epic 2 — Headset Inventory · 13 points · Needs Epic 1
+The technician side of Workflow B. Headsets have to exist before anyone can borrow one.
+Story 2.1 — Add a headset  · 5 pts · Must · R2
+As a technician, I want to add a headset, so that students can see it and book it.
+Acceptance criteria
+•	Given model and asset tag, when I save, then the headset appears in the list as Available.
+•	Given an asset tag that already exists, when I save, then I see an error and nothing is created.
+•	Given I am a student, when I call the add route, then the server returns 403.
+Sub-tasks
+•	Headset model, POST route, add form, unique asset tag check.
+Story 2.2 — Edit a headset and set its status  · 5 pts · Must · R2
+As a technician, I want to change a headset record, so that the list stays right.
+Acceptance criteria
+•	Given I change the model or the notes, when I save, then the list shows the new values.
+•	Given I set a headset to Maintenance, when a student searches, then it does not appear in the results.
+•	Given a headset has approved future loans, when I set it to Maintenance, then I am warned before it saves.
+Story 2.3 — Retire a headset  · 3 pts · Must · R2
+As a technician, I want to retire a broken headset, so that nobody can book it.
+Acceptance criteria
+•	Given I retire a headset, when a student searches, then it never appears.
+•	Given a retired headset, when I open an old loan, then the headset still shows on that record.
+Epic 3 — Availability and Requests · 24 points · Needs Epic 2
+All of Workflow A. This is where the overlap rule is enforced for the first time.
+Story 3.1 — Browse the headset list  · 3 pts · Must · R3
+As a student, I want to see what headsets exist, so that I know what I can ask for.
+Acceptance criteria
+•	Given I am logged in as a student, when I open the list, then I see model, asset tag and status.
+•	Given there are no headsets, when I open the list, then I see a message, not a blank page.
+Story 3.2 — Search availability for a date range  · 8 pts · Must · R3, R6
+As a student, I want to enter my dates and see only what is free, so that I do not ask for something already booked.
+Acceptance criteria
+•	Given a start and end date, when I search, then only headsets with no Pending or Approved loan overlapping those dates are shown.
+•	Given an end date before the start date, when I search, then I see a validation message and nothing is sent.
+•	Given nothing is free, when I search, then I see a message suggesting other dates.
+Sub-tasks
+•	Overlap query, availability route, date picker, seven boundary tests.
+The seven overlap tests
+An existing loan runs day 10 to day 14. A new request must be refused for 8 to 12, 12 to 14, 14 to 18, 8 to 18 and 10 to 15. It must be allowed for 5 to 9 and for 16 to 20.
+Story 3.3 — Request a loan  · 8 pts · Must · R4, R6
+As a student, I want to request a headset for my dates, so that the technician can decide.
+Acceptance criteria
+•	Given a free headset and valid dates, when I submit, then a loan is created with the status Pending.
+•	Given someone booked the same dates while I was filling in the form, when I submit, then my request is refused with a message saying it is no longer free.
+•	Given I am a technician, when I call the request route, then the server returns 403.
+Sub-tasks
+•	Loan model, POST route, second overlap check before save, request form.
+Story 3.4 — See my loans and cancel a pending request  · 5 pts · Must · R4
+As a student, I want to see my requests and drop one I no longer need, so that I know where I stand and do not hold dates I will not use.
+Acceptance criteria
+•	Given I have loans, when I open my loans, then I see each one with its dates and status, newest first.
+•	Given a request was rejected, when I open my loans, then I can see the reason.
+•	Given a Pending request, when I cancel it, then its status becomes Cancelled and those dates are free again straight away.
+•	Given an Approved loan, when I open it, then there is no cancel button.
+Epic 4 — Approvals and Returns · 18 points · Needs Epic 3
+The rest of Workflow B. The decision is where the overlap rule is checked for the last time.
+Story 4.1 — See the pending request queue  · 5 pts · Must · R5
+As a technician, I want one list of everything waiting, so that nothing sits unanswered.
+Acceptance criteria
+•	Given there are pending requests, when I open the queue, then I see student, headset and dates, oldest first.
+•	Given the queue is empty, when I open it, then I see a message, not a blank page.
+•	Given I am a student, when I call the queue route, then the server returns 403.
+Story 4.2 — Approve or reject a request  · 8 pts · Must · R5, R6
+As a technician, I want to decide on a request, so that the student knows where they stand.
+Acceptance criteria
+•	Given a pending request with no clash, when I approve it, then its status becomes Approved and the student can see it.
+•	Given a clash appeared since the request was made, when I approve it, then it is refused and the status stays Pending.
+•	Given I reject a request, when I save, then a reason is required and the student can see it.
+Sub-tasks
+•	Approve route, reject route with reason, second overlap check inside approve, clash test.
+Story 4.3 — Record collection and return  · 5 pts · Should · R5
+As a technician, I want to record the handover and the return, so that the lab knows who has what.
+Acceptance criteria
+•	Given an approved loan, when I record collection, then the status becomes Collected with a timestamp.
+•	Given a collected loan, when I record the return, then the status becomes Returned and I can mark the condition as Good or Damaged.
+•	Given a returned loan, when a student searches those dates, then the headset is free again.
+1.9 Sprint Plan
+Two sprints, three weeks each. Once a sprint starts, nothing is added to it. Both sprints hold Must work only. The one Should story is left for a third sprint.
+Sprint length	3 weeks. At 15 hours a week, a two-week sprint cannot hold a whole workflow, so there would be nothing to show at the first review.
+Team	1 person. The jobs below are all done by the same person.
+Capacity	45 hours a sprint.
+Velocity	Sprint 1 was planned at about one hour a point. Sprint 2 uses the real Sprint 1 number.
+Board	Jira. To Do, In Progress, Code Review, Testing, Done. Work waiting on something else goes to Blocked.
 
-________________________________________
-EPIC 3 — Availability and Requests
-The student side and the heart of the system. Needs Epic 2. Must · 27 points
-Story 3.1 — Browse the headset list · 3 pts · Must · R4 As a student, I want to see what headsets the lab has, so I know what is available to borrow.
-Acceptance criteria:
-•	Given headsets exist, when the page loads, then each shows model, asset tag and current status.
-•	Given there are none, then I see a message saying so instead of a blank page.
-________________________________________
-Story 3.2 — Search availability for a date range · 8 pts · Must · R5, R13 As a student, I want to enter my dates and see only the headsets that are actually free, so I do not waste a trip to the lab.
-Acceptance criteria:
-•	Given a start and end date, when I search, then I see only headsets with no approved or pending loan overlapping those dates.
-•	Given a headset booked for part of my range, then it does not appear.
-•	Given an end date before the start date, when I search, then I see a validation message and no search runs.
-•	Given a start date in the past, then I see a validation message.
-•	Given nothing is free, then I see a message suggesting I try different dates.
-Sub-tasks: overlap query · availability endpoint · date picker with validation · results list · empty state · overlap unit tests covering the five boundary cases below
-The overlap cases to test. An existing loan runs from day 10 to day 15. A new request must be refused if it runs 8–12 (overlaps the start), 12–14 (sits inside), 14–18 (overlaps the end), 8–18 (covers it), or 10–15 (exactly the same). It must be allowed for 5–9 and16–20. These seven tests are the main evidence that R13 holds.________________________________________
-Story 3.3 — Request a loan · 8 pts · Must · R6 As a student, I want to request a headset for my dates, so the technician knows to set it aside.
-Acceptance criteria:
-•	Given a free headset and valid dates, when I submit, then a request is saved as Pending and appears in my loan list.
-•	Given another student requested the same headset and dates while I was filling in the form, when I submit, then my request is refused with a message saying it is no longer free.
-•	Given I already have a pending request for the same headset and dates, then I cannot submit a duplicate.
-•	Given I am a technician calling the endpoint directly, then the server returns 403.
-________________________________________
-Story 3.4 — See my loan history · 5 pts · Must · R7 As a student, I want to see my current and past loans, so I know what I have and when it is due.
-Acceptance criteria: 
-•	Current requests show their status: Pending, Approved, Rejected or Cancelled.
-•	Rejected requests show the reason the technician gave.
-•	Past loans show the date they were returned.
-•	Given I have no loans, then I see a message saying so.
+Who owns what
+One person does all the work, so ownership is shown as the job being done. The reviewer job is what catches the mistakes the developer job made.
+Job	What it covers	Who
+Developer	Writes the code and the tests. Makes the branch and pushes the commits.	Ali rezaeimanesh
+Reviewer	Opens the pull request, writes the self-review comment, checks no secrets were committed, merges.	Ali rezaeimanesh
+Product owner	Sets the priority and accepts stories against their acceptance criteria.	Ali rezaeimanesh
 
-________________________________________
-Story 3.5 — Cancel a pending request · 3 pts · Must · R12 As a student, I want to cancel a request I no longer need, so the headset is freed for someone else.
-Acceptance criteria:
-•	Given a Pending request, when I cancel it, then the status becomes Cancelled and those dates are free immediately.
-•	Given an Approved or Collected loan, then the cancel option is not available.
-•	Given another student’s request, when I call the endpoint directly, then the server returns 403.
-________________________________________
-EPIC 4 — Approvals and Returns
-Handles the technician's decision, and records collection and return afterwards. Needs Epic 3. Must · 21 points
-Story 4.1 — See the pending request queue · 5 pts · Must · R8 As a technician, I want one list of everything waiting on me, so nothing sits unanswered.
-Acceptance criteria: shows student name, headset, dates and how long it has been waiting, oldest first; if the queue is empty, I see a message saying so.
-________________________________________
-Story 4.2 — Approve or reject a request · 8 pts · Must · R9, R13 As a technician, I want to approve or reject a request, so the student knows where they stand.
-Acceptance criteria:
-•	Given a pending request with no clash, when I approve, then the status changes to Approved and those dates are locked for that headset.
-•	Given another approval created a clash since the request was made, when I approve, then it is refused and I am shown the clashing loan.
-•	Given I reject, then I must give a reason, and the student can see it.
-•	Given the headset was set to Maintenance after the request, when I approve, then I am warned first.
-Sub-tasks: approve endpoint with a second overlap check · reject endpoint with reason field · status transitions · clash warning UI · tests for the re-check
-________________________________________
-Story 4.3 — Record a collection · 3 pts · Should · R10 Acceptance criteria: only Approved loans can be marked Collected; the collection date and time are recorded.
-________________________________________
-Story 4.4 — Record a return and condition · 5 pts · Should · R11 As a technician, I want to record how a headset came back, so damage is linked to the loan that caused it.
-Acceptance criteria:
-•	Given a Collected loan, when I record the return, then the status becomes Returned and the dates are freed.
-•	Given I mark the condition as Damaged, then I must add a note, and the headset is set to Maintenance automatically.
-•	Given the return is after the due date, then it is flagged as late in the record.
-________________________________________
-EPIC 5 — Deployment, Docs and Testing
-Runs across both sprints. Must · 16 points
-Item	Type	Pts	Priority
-5.1 Set up EC2, security group and inbound rules	Task	3	Must
-5.2 Write the deployment steps	Task	3	Must
-5.3 Write the README	Task	3	Must
-5.4 Check no secrets are in the repo	Task	2	Must
-5.5 Unit tests to 70% coverage	Task	5	Must
-Total: 100 points across 5 epics.
+Definition of Done
+•	Every acceptance criterion has been run by hand and passes.
+•	New server rules have unit tests and those tests pass.
+•	The branch is merged into main through a pull request with a self-review comment.
+•	No password, key or connection string is in the commit.
+•	The change is on EC2 and works on the public URL.
+Sprint 1: Accounts and inventory
+Dates	`dd/mm` to `dd/mm`
+Goal	A technician can log in and add headsets. A student can log in and see them. Workflow B steps B1 to B3 work on the live URL.
+Committed	39 points
+
+ID	Item	Pts	Needs first
+1.3	Set up the database and EC2	5	Nothing
+1.1	Sign up and log in	8	1.3
+1.2	Role check middleware	5	1.1
+2.1	Add a headset	5	1.2
+2.2	Edit a headset and set its status	5	2.1
+2.3	Retire a headset	3	2.1
+3.1	Browse the headset list	3	2.1
+1.4	README and deployment steps	5	1.3
+	Total	39	
+
+1.2 is built before the inventory work even though users never see it. Every story in Epic 2 has a criterion that says a student gets a 403, and there is nothing to test that against until the middleware exists.
+Blockers
+Item	Waiting on	Why it was stuck	How it cleared
+1.1 Sign up and log in	1.3 Database	No account can be saved without a database.	Atlas connected on day 2.
+2.1 Add a headset	1.2 Role middleware	The 403 criterion could not be tested.	1.2 done on day 6. Came out of Blocked the same day.
+1.3 Database	Outside the team	The EC2 public IP was not on the Atlas access list. The app worked on the laptop but not on the server.	IP added to the Atlas list. Half a day lost.
+Risks
+ID	Risk	Chance	Impact	What we do about it
+RK1	The free tier EC2 instance runs out of disk during npm install.	Medium	High	Grow the disk before deploying, using the Tutorial 1 steps.
+RK2	Atlas blocks the EC2 instance because its IP is not on the access list.	Medium	Medium	Add the IP on day 1.
+RK3	Role checks end up in the interface only and not on the server.	Low	High	1.2 has its own test that sends a student token to a technician route.
+RK4	A secret gets committed early and stays in the git history.	Low	High	Check the repo in Sprint 1, not at the end.
+Review
+Committed	39 points
+Done	39 points
+Real velocity	39 points
+Goal met	Yes. Both roles log in, headsets can be added and edited, and students see the list on the live URL.
+Sprint 2: Availability, requests and approvals
+Dates	`dd/mm` to `dd/mm`
+Goal	Workflow A and Workflow B both work end to end. A student can search, request and see the answer. A technician can see the queue and decide.
+Committed	39 points
+
+ID	Item	Pts	Needs first
+3.2	Search availability for a date range	8	2.1, 3.1
+3.3	Request a loan	8	3.2
+3.4	See my loans and cancel a request	5	3.3
+4.1	See the pending request queue	5	3.3, 1.2
+4.2	Approve or reject a request	8	4.1, 3.2
+1.5	Unit tests to 70% coverage	5	All of the above
+	Total	39	
+
+3.2 goes first because the rest of the sprint leans on it. The overlap query it builds is used again by 3.3 and again by 4.2.
+Blockers
+Item	Waiting on	Why it was stuck	How it cleared
+3.3 Request a loan	3.2 Search availability	The request runs the same overlap check the search runs. Writing it twice would let the two drift apart.	3.2 done on day 5. The query went into one function and both call it.
+4.1 and 4.2	3.3 Request a loan	Nothing to queue and nothing to approve until requests exist.	3.3 done on day 8.
+4.2 Approve or reject	An open question	Blocked for 2 days. It was not clear what should happen if a clash appears after the request was made.	Settled by decision D5. The approve step checks a second time and refuses if it clashes.
+Risks
+ID	Risk	Chance	Impact	What we do about it
+RK5	Two approvals both pass the overlap check before either one saves, and the headset gets double booked.	Medium	High	The approve step checks the database again and refuses if it clashes. See D5.
+RK6	Time zones move a loan by a day, so a search and a loan record disagree.	Medium	Medium	Dates are stored as UTC midnight and compared as whole days.
+RK7	The 70% coverage target is missed because tests are left to the last week.	Medium	Medium	Tests are written with each story. 1.5 only fills the gaps.
+RK8	The EC2 instance is down or the URL changed during marking.	Low	High	Load the public URL once a day through the marking week.
+Review
+Committed	39 points
+Done	39 points
+Real velocity	39 points
+Coverage	72% on the controllers, against a 70% target
+Goal met	Yes. Both workflows work end to end on the live URL and the seven overlap tests pass.
+
+5 points are left after Sprint 2. That is Story 4.3, recording collection and return, which is a Should item. Both handovers happen at the counter in person, so neither workflow needs it. A third sprint would pick it up first.
+1.10 Decision and Change Log
+Every decision that changed the shape of the project is written down here. Rows are added, never edited. If a decision is undone later, the reversal gets its own row.
+ID	What changed	Why	Evidence looked at	Affected
+D1	The project changed from a game playtesting platform to an XR headset borrowing system.	The borrowing system has a real scheduling rule in the middle of it. Two loans of the same headset cannot overlap, and a spreadsheet cannot do that.	The approved project list, item 61. Confirmed by the tutor by email.	All of Task 1, the backlog, every diagram
+D2	Two roles only, Student and Technician. A Lab Manager role was dropped.	A manager role would only read data. It adds screens but no new rule to test.	The permission table in 1.3. Lab manager stays a stakeholder but is not a user role.	1.2, 1.3, R1, Epic 1
+D3	Workflow A was picked for the behaviour diagram instead of Workflow B.	Workflow A has the availability check in it, so it shows more of how the system works. Workflow B is mostly a status change.	R6 and the seven overlap tests in Story 3.2.	Task 2, the traceability matrix
+D4	Delete became a status change instead of removing the record.	Loan history has to survive. Deleting a headset would leave old loans pointing at nothing.	The criterion on Story 2.3 that says old loans still show the retired headset.	Stories 2.3 and 3.4, 1.11
+D5	A second overlap check was added inside the approve step.	A clash can appear in the gap between a student searching and a technician approving. One check is not enough to keep R6 true.	Walking through Workflow A step by step showed the gap.	Story 4.2, R6, SC1, the sequence diagram
+D6	Sprints are 3 weeks, not 2.	At `15` hours a week a two-week sprint cannot hold a whole workflow.	78 Must points against 45 hours a sprint. The tutor confirmed at least two iterations are expected.	1.9
+D7	Sign up offers both roles, and picking Technician asks for a staff code checked against an environment variable.	The scope said the role is picked at sign up, but sign up only ever made students, so no technician account could exist. A plain dropdown was rejected because anyone could make themselves a technician.	R7 and the wrong-role tests in Story 1.2. A marker also has to be able to make a technician account during marking.	1.3, 1.5, Story 1.1, the requirement diagram
+D8	Requirements went from 16 down to 7.	The old list split single capabilities across several IDs, which made the requirement diagram and the traceability matrix much bigger without saying anything new.	The tutor confirmed there is no expected number. The brief only shows three example rows in its matrix.	1.4, 1.6, 1.7, 1.8, 1.11, Task 2
+D9	Epics went from 5 to 4 and stories from 19 to 15.	Deployment, docs and testing had no user story attached, so they moved into Foundations with login and roles. Stories that share a screen or a form were merged.	The tutor confirmed there is no recommended number of epics.	1.8, 1.9, 2.2
+TASK 2 — SYSTEM DESIGN
+2.1 The Diagrams
+Three diagrams, all in one draw.io file, one per tab. The link is on the cover page. The requirement diagram shows what the system has to do. The block definition diagram shows what it is made of. The sequence diagram shows what happens when a student borrows a headset.
+2.1.1 Requirement Diagram
+All seven requirements sit in two groups, functional and non-functional, under one root. Containment lines show which group each one belongs to.
+Derive lines show where a requirement came from. R3, R4 and R5 all point at R6, because the search, the request and the approval only exist to keep the overlap rule true.
+Three test cases hang off R6 and R7 and say how each one gets proved. The two actors are linked with trace lines, so you can see at a glance which role owns which half of the system.
+[Paste the requirement diagram here. Figure 1.]
+2.1.2 Block Definition Diagram
+This is the system design diagram. The XRLend System block is made of a Web Client, an API Server and a Database. The API Server opens up into RoleMiddleware and three controllers. The Database opens up into User, Headset and Loan, each with its values and operations.
+Four enumerations set the values that matter. LoanStatus is the important one, with six values a loan can be in.
+A constraint block called NoOverlap is attached to Loan. It holds R6 as an expression: a new loan is only allowed if it finishes before the existing one starts, or starts after it finishes.
+[Paste the block definition diagram here. Figure 2.]
+2.1.3 Sequence Diagram — Workflow A
+Workflow A was picked over Workflow B in decision D3. Five lifelines: Student, Web Client, API Server, Database and Lab Technician. It runs from login through to the student seeing the decision.
+Three alt fragments show what happens when things go wrong. Invalid dates never leave the browser. An empty result gets a message. A clash found at save time returns a 409 and nothing is written.
+The overlap check appears twice on purpose, once at search and once inside the request. A clash can appear while the student is filling in the form, so one check is not enough. That is decision D5.
+[Paste the sequence diagram here. Figure 3.]
+2.2 Traceability Matrix
+Every requirement is followed from the backlog, through the design, into the interface, and out to a commit and the running site.
+Req	Story	Design element	Figma frame	Commit	Deployment evidence
+R1	1.1	User block, signUp(), logIn()	Sign up, Login, Student dashboard, Technician dashboard	`sha`	Both dashboards reachable after login
+R2	2.1, 2.2, 2.3	Headset block, create() update() retire()	Add headset, Edit headset	`sha`	Headset added live and visible in the list
+R3	3.1, 3.2	HeadsetController, Headset.isAvailable()	Headset list, Availability search, Empty results	`sha`	Search returns only free headsets
+R4	3.3, 3.4	Loan block, request(), cancel()	Request form, My loans, Cancel confirm	`sha`	Request saved as Pending, cancel frees the dates
+R5	4.1, 4.2, 4.3	LoanController, Loan.approve(), Loan.reject()	Request queue, Approve confirm, Reject with reason	`sha`	Status changes and the student can see it
+R6	3.2, 3.3, 4.2	NoOverlap constraint block, Loan.overlaps(), sequence messages 10 and 17	Availability search, Clash error	`sha`	Seven overlap tests pass on the release tag
+R7	1.1, 1.2	RoleMiddleware block, User.passwordHash, sequence messages 5 and 16	Date error, Form validation	`sha`	Wrong-role token returns 403, database shows a hash
+
+Fill in the commit column with the short SHA of the commit that finished each story. R5 stays partly empty until Story 4.3 is built in a third sprint, which is explained in 1.9.
 
