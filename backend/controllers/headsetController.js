@@ -1,5 +1,5 @@
 const Headset = require('../models/Headset');
-module.exports = { addHeadset, getHeadsets };
+
 
 // R9: a technician adds a headset
 const addHeadset = async (req, res) => {
@@ -55,3 +55,5 @@ const getAvailable = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+module.exports = { addHeadset, getHeadsets, getAvailable };

@@ -5,35 +5,26 @@ const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold">Task Manager</Link>
-      <div>
+    <nav className="bg-white border-b border-[#DFE1DF] px-4 h-[54px] flex justify-between items-center">
+      <Link to="/" className="text-lg font-semibold tracking-tight">XRLend</Link>
+      <div className="flex items-center gap-4 text-sm">
         {user ? (
           <>
-            <Link to="/tasks" className="mr-4">Tasks</Link>
-            <Link to="/profile" className="mr-4">Profile</Link>
-            <button
-              onClick={handleLogout}
-              className="bg-red-500 px-4 py-2 rounded hover:bg-red-700"
-            >
-              Logout
-            </button>
+            <span className="font-mono text-[9.5px] tracking-[0.08em] uppercase text-[#0E6F72] bg-[#E4EFEF] px-2 py-1 rounded">
+              {user.role}
+            </span>
+            <Link to={user.role === 'technician' ? '/lab' : '/find'}>
+              {user.role === 'technician' ? 'Lab' : 'Find'}
+            </Link>
+            <button onClick={handleLogout} className="text-[#6A6F73]">Log out</button>
           </>
         ) : (
           <>
-            <Link to="/login" className="mr-4">Login</Link>
-            <Link
-              to="/register"
-              className="bg-green-500 px-4 py-2 rounded hover:bg-green-700"
-            >
-              Register
-            </Link>
+            <Link to="/login">Log in</Link>
+            <Link to="/register" className="bg-[#16181C] text-white px-3.5 py-1.5 rounded-md">Sign up</Link>
           </>
         )}
       </div>

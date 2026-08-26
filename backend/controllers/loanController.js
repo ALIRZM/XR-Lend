@@ -115,4 +115,4 @@ const rejectLoan = async (req, res) => {
     }
 };
 
-module.exports = { requestLoan, getMyLoans, getPendingLoans };
+module.exports = { requestLoan, getMyLoans, getPendingLoans, approveLoan, rejectLoan };
