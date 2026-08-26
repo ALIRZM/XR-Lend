@@ -66,5 +66,53 @@ const getPendingLoans = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+// R12 and R13: a technician decides.
+// The overlap rule is checked a third time here, because a clash can appear
+// between the request being made and the decision being taken. Decision D5.
+const approveLoan = async (req, res) => {
+    try {
+        const loan = await Loan.findById(req.params.id);
+        if (!loan) return res.status(404).json({ message: 'That request does not exist' });
+        if (loan.status !== 'Pending') {
+            return res.status(400).json({ message: 'That request has already been decided' });
+        }
+
+        const clashes = await findClashingLoans([loan.headset], loan.startDate, loan.endDate);
+        const others = clashes.filter(c => String(c._id) !== String(loan._id));
+        if (others.length > 0) {
+            return res.status(409).json({
+                message: 'Those dates now clash with another loan. The request stays Pending.',
+            });
+        }
+
+        loan.status = 'Approved';
+        await loan.save();
+        res.json(loan);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// R12: a rejection always carries a reason the student can read
+const rejectLoan = async (req, res) => {
+    const { reason } = req.body;
+    try {
+        if (!reason || !reason.trim()) {
+            return res.status(400).json({ message: 'A reason is needed when rejecting' });
+        }
+        const loan = await Loan.findById(req.params.id);
+        if (!loan) return res.status(404).json({ message: 'That request does not exist' });
+        if (loan.status !== 'Pending') {
+            return res.status(400).json({ message: 'That request has already been decided' });
+        }
+
+        loan.status = 'Rejected';
+        loan.rejectionReason = reason.trim();
+        await loan.save();
+        res.json(loan);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
 
 module.exports = { requestLoan, getMyLoans, getPendingLoans };
