@@ -1,46 +1,63 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
 
+// R5: start a session and open the dashboard for the role
 const Login = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     try {
-      const response = await axiosInstance.post('/api/auth/login', formData);
-      login(response.data);
-      navigate('/tasks');
-    } catch (error) {
-      alert('Login failed. Please try again.');
+      const { data } = await axiosInstance.post('/api/auth/login', form);
+      login(data);
+      navigate(data.role === 'technician' ? '/lab' : '/find');
+    } catch (err) {
+      // Never say which of the two was wrong
+      setError('That email and password do not match. Check both and try again.');
     }
   };
 
+  const field = `w-full h-[50px] px-3.5 rounded-lg text-base bg-white border ${
+    error ? 'border-[#9C2E26] border-[1.5px]' : 'border-[#DFE1DF]'}`;
+  const label = 'block text-[10.5px] tracking-[0.08em] uppercase text-[#6A6F73] mb-1.5 font-mono';
+
   return (
-    <div className="max-w-md mx-auto mt-20">
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded">
-        <h1 className="text-2xl font-bold mb-4 text-center">Login</h1>
-        <input
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">
-          Login
+    <div className="max-w-md mx-auto mt-24 px-4">
+      <h1 className="text-[28px] font-semibold tracking-tight mb-1">Log in</h1>
+      <p className="text-[#6A6F73] text-sm mb-6">Borrow XR headsets from the lab.</p>
+
+      {error && (
+        <div className="mb-4 rounded-lg bg-[#F9EBE9] text-[#9C2E26] border-l-[3px] border-[#9C2E26] px-3.5 py-3 text-sm">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className={label}>University email</label>
+          <input type="email" className={field}
+            value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+        </div>
+        <div className="mb-5">
+          <label className={label}>Password</label>
+          <input type="password" className={field}
+            value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
+        </div>
+        <button type="submit"
+          className="w-full h-[50px] bg-[#16181C] text-white rounded-lg font-semibold text-base">
+          Log in
         </button>
       </form>
+
+      <p className="text-center text-[13px] text-[#6A6F73] mt-4">
+        New here? <Link to="/register" className="text-[#0E6F72]">Create an account</Link>
+      </p>
     </div>
   );
 };
