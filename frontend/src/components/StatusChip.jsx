@@ -1,19 +1,18 @@
-// One component, six variants, straight from the LoanStatus enumeration
+// One chip, one variant per status. Colours taken from the Figma file.
 const styles = {
-  Pending:   'text-[#8F5A00] bg-[#FBF1DF]',
-  Approved:  'text-[#1C6440] bg-[#E7F2EB]',
-  Rejected:  'text-[#9C2E26] bg-[#F9EBE9]',
-  Cancelled: 'text-[#5F6468] bg-[#EEEFEE]',
-  Collected: 'text-[#1A5793] bg-[#E7EFF7]',
-  Returned:  'text-[#414B58] bg-[#EBEDF1]',
-  Available: 'text-[#1C6440] bg-[#E7F2EB]',
+  Pending:     'bg-[#fbf1df] text-[#8f5a00]',
+  Approved:    'bg-[#e7f2eb] text-[#1c6440]',
+  Rejected:    'bg-[#f9ebe9] text-[#9c2e26]',
+  Cancelled:   'bg-[#f1f1f1] text-[#555555]',
+  Collected:   'bg-[#e7eff7] text-[#1a5793]',
+  Returned:    'bg-[#f1f1f1] text-[#555555]',
+  Available:   'bg-[#e7f2eb] text-[#1c6440]',
+  Maintenance: 'bg-[#fbf1df] text-[#8f5a00]',
+  Retired:     'bg-[#f1f1f1] text-[#555555]',
 };
-
 const StatusChip = ({ status }) => (
-  <span className={`font-mono text-[11px] tracking-[0.05em] uppercase px-2 py-1 rounded ${
-    styles[status] || styles.Cancelled}`}>
-    {status}
-  </span>
+  <div className={`rounded-lg px-3 py-[3px] whitespace-nowrap ${styles[status] || styles.Cancelled}`}>
+    <span className="text-base text-center">{status}</span>
+  </div>
 );
-
 export default StatusChip;

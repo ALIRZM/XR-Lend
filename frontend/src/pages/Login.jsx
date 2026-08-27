@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
+import Shell from '../components/Shell';
+import { BTN, FIELD_P, FIELD_E, ERRBOX } from '../components/ui';
 
 // R5: start a session and open the dashboard for the role
 const Login = () => {
@@ -10,56 +12,45 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setError('');
     try {
       const { data } = await axiosInstance.post('/api/auth/login', form);
       login(data);
-      navigate(data.role === 'technician' ? '/lab' : '/find');
-    } catch (err) {
+      navigate(data.role === 'technician' ? '/lab' : '/home');
+    } catch {
       // Never say which of the two was wrong
       setError('That email and password do not match. Check both and try again.');
     }
   };
 
-  const field = `w-full h-[50px] px-3.5 rounded-lg text-base bg-white border ${
-    error ? 'border-[#9C2E26] border-[1.5px]' : 'border-[#DFE1DF]'}`;
-  const label = 'block text-[10.5px] tracking-[0.08em] uppercase text-[#6A6F73] mb-1.5 font-mono';
+  const field = error ? FIELD_E : FIELD_P;
 
   return (
-    <div className="max-w-md mx-auto mt-24 px-4">
-      <h1 className="text-[28px] font-semibold tracking-tight mb-1">Log in</h1>
-      <p className="text-[#6A6F73] text-sm mb-6">Borrow XR headsets from the lab.</p>
+    <Shell>
+      <form onSubmit={submit} className="mx-[17px] mt-[199px] flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-black text-[32px] font-semibold tracking-[-0.96px] leading-10">Log In</h1>
+          <p className="text-[#667085] text-base font-medium tracking-[-0.48px] leading-6">Welcome Back!</p>
+        </div>
 
-      {error && (
-        <div className="mb-4 rounded-lg bg-[#F9EBE9] text-[#9C2E26] border-l-[3px] border-[#9C2E26] px-3.5 py-3 text-sm">
-          {error}
-        </div>
-      )}
+        {error && <div className={ERRBOX} role="alert">{error}</div>}
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className={label}>University email</label>
-          <input type="email" className={field}
-            value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+        <div className="flex flex-col gap-3">
+          <input className={field} type="email" required placeholder="University Email"
+            value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <input className={field} type="password" required placeholder="Password"
+            value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
         </div>
-        <div className="mb-5">
-          <label className={label}>Password</label>
-          <input type="password" className={field}
-            value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
-        </div>
-        <button type="submit"
-          className="w-full h-[50px] bg-[#16181C] text-white rounded-lg font-semibold text-base">
-          Log in
-        </button>
+
+        <button type="submit" className={BTN}>Get Started</button>
+
+        <p className="text-center text-[#98a2b3] text-base font-medium">
+          Don&apos;t have an account? <Link to="/register" className="text-black text-xs">Register &rarr;</Link>
+        </p>
       </form>
-
-      <p className="text-center text-[13px] text-[#6A6F73] mt-4">
-        New here? <Link to="/register" className="text-[#0E6F72]">Create an account</Link>
-      </p>
-    </div>
+    </Shell>
   );
 };
-
 export default Login;
